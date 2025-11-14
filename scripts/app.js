@@ -28,6 +28,11 @@ class CameraPlanner {
         this.canvasManager = new CanvasManager('mainCanvas');
         console.log('Canvas Manager initialized');
 
+        // Initialize camera renderer
+        const cameraRenderer = new CameraRenderer(this.canvasManager.ctx);
+        this.canvasManager.setCameraRenderer(cameraRenderer);
+        console.log('Camera Renderer initialized');
+
         // Initialize drawing tools
         this.drawingTools = new DrawingTools(this.canvasManager);
         console.log('Drawing Tools initialized');
