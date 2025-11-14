@@ -105,6 +105,11 @@ class UIController {
                 clearDistance: parseInt(clearDistanceInput.value) || 150
             });
 
+            // Trigger vision recalculation when camera properties change
+            if (this.canvasManager.visionCalculator) {
+                this.canvasManager.visionCalculator.requestRecalculation();
+            }
+
             this.canvasManager.render(camera);
         };
 

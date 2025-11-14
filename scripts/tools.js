@@ -436,6 +436,10 @@ class DrawingTools {
         // Handle select mode camera drag end
         if (this.currentTool === 'select' && this.cameraDragState) {
             this.cameraDragState = null;
+            // Trigger vision recalculation when camera is modified
+            if (this.canvasManager.visionCalculator) {
+                this.canvasManager.visionCalculator.requestRecalculation();
+            }
             if (window.updateStatus) {
                 window.updateStatus('Camera modified');
             }
@@ -445,6 +449,10 @@ class DrawingTools {
         // Handle select mode drag end
         if (this.currentTool === 'select' && this.dragState) {
             this.dragState = null;
+            // Trigger vision recalculation when obstacle is modified
+            if (this.canvasManager.visionCalculator) {
+                this.canvasManager.visionCalculator.requestRecalculation();
+            }
             if (window.updateStatus) {
                 window.updateStatus('Shape modified');
             }
