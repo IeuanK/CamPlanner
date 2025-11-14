@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Layout Planner</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header with tools and view modes -->
+        <header class="toolbar">
+            <div class="tools-panel">
+                <h1>Camera Layout Planner</h1>
+                <div class="tool-buttons">
+                    <button id="tool-select" class="tool-btn" data-tool="select" title="Select/Move">
+                        <span>Select</span>
+                    </button>
+                    <button id="tool-freehand" class="tool-btn active" data-tool="freehand" title="Freehand Drawing">
+                        <span>Freehand</span>
+                    </button>
+                    <button id="tool-line" class="tool-btn" data-tool="line" title="Line Tool">
+                        <span>Line</span>
+                    </button>
+                    <button id="tool-rectangle" class="tool-btn" data-tool="rectangle" title="Rectangle Tool">
+                        <span>Rectangle</span>
+                    </button>
+                    <button id="tool-camera" class="tool-btn" data-tool="camera" title="Place Camera" disabled>
+                        <span>Camera</span>
+                    </button>
+                </div>
+            </div>
+            <div class="view-modes">
+                <button id="mode-fog" class="mode-btn active" data-mode="fog" disabled>Fog View</button>
+                <button id="mode-heatmap" class="mode-btn" data-mode="heatmap" disabled>Heatmap</button>
+            </div>
+            <div class="actions">
+                <button id="btn-clear" class="action-btn" title="Clear Canvas">Clear All</button>
+                <button id="btn-undo" class="action-btn" title="Undo" disabled>Undo</button>
+            </div>
+        </header>
+
+        <!-- Canvas Area -->
+        <div class="canvas-container">
+            <canvas id="mainCanvas"></canvas>
+        </div>
+
+        <!-- Properties Panel (hidden by default, shown when camera is selected) -->
+        <aside id="properties-panel" class="properties-panel" style="display: none;">
+            <h3>Camera Properties</h3>
+            <div class="property-group">
+                <label for="camera-angle">Angle (degrees):</label>
+                <input type="number" id="camera-angle" min="0" max="360" value="0" step="1">
+            </div>
+            <div class="property-group">
+                <label for="camera-fov">Field of View (degrees):</label>
+                <input type="number" id="camera-fov" min="10" max="180" value="90" step="5">
+            </div>
+            <div class="property-group">
+                <label for="camera-max-distance">Max Distance (px):</label>
+                <input type="number" id="camera-max-distance" min="50" max="1000" value="300" step="10">
+            </div>
+            <div class="property-group">
+                <label for="camera-clear-distance">Clear Distance (px):</label>
+                <input type="number" id="camera-clear-distance" min="50" max="1000" value="150" step="10">
+            </div>
+            <div class="property-actions">
+                <button id="btn-duplicate-camera" class="action-btn">Duplicate Camera</button>
+                <button id="btn-delete-camera" class="action-btn danger">Delete Camera</button>
+            </div>
+        </aside>
+
+        <!-- Status Bar -->
+        <footer class="status-bar">
+            <span id="status-text">Ready - Select a tool to start drawing</span>
+            <span id="cursor-position">X: 0, Y: 0</span>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="scripts/canvas.js"></script>
+    <script src="scripts/tools.js"></script>
+    <script src="scripts/ui.js"></script>
+    <script src="scripts/app.js"></script>
+</body>
+</html>
