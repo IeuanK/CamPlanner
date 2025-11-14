@@ -33,6 +33,11 @@ class CameraPlanner {
         this.canvasManager.setCameraRenderer(cameraRenderer);
         console.log('Camera Renderer initialized');
 
+        // Initialize vision calculator
+        const visionCalculator = new VisionCalculator(this.canvasManager);
+        this.canvasManager.setVisionCalculator(visionCalculator);
+        console.log('Vision Calculator initialized');
+
         // Initialize drawing tools
         this.drawingTools = new DrawingTools(this.canvasManager);
         console.log('Drawing Tools initialized');

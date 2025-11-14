@@ -10,6 +10,7 @@ class CanvasManager {
         this.obstacles = [];
         this.cameras = [];
         this.cameraRenderer = null;
+        this.visionCalculator = null;
 
         this.init();
     }
@@ -21,6 +22,10 @@ class CanvasManager {
 
     setCameraRenderer(renderer) {
         this.cameraRenderer = renderer;
+    }
+
+    setVisionCalculator(calculator) {
+        this.visionCalculator = calculator;
     }
 
     resizeCanvas() {
@@ -42,7 +47,17 @@ class CanvasManager {
     render(selectedCamera = null) {
         this.clear();
 
-        // Draw all cameras first (so obstacles appear on top)
+        // Draw visibility polygons first (background layer)
+        if (this.visionCalculator && this.visionCalculator.isEnabled()) {
+            this.cameras.forEach(camera => {
+                const visionData = this.visionCalculator.getVisionData(camera.id);
+                if (visionData && visionData.polygon) {
+                    this.drawVisibilityPolygon(camera, visionData);
+                }
+            });
+        }
+
+        // Draw all cameras (so obstacles appear on top)
         if (this.cameraRenderer) {
             this.cameras.forEach(camera => {
                 const isSelected = selectedCamera && selectedCamera.id === camera.id;
@@ -50,7 +65,7 @@ class CanvasManager {
             });
         }
 
-        // Draw all obstacles
+        // Draw all obstacles (top layer)
         this.obstacles.forEach(obstacle => {
             this.drawObstacle(obstacle);
         });
@@ -135,24 +150,64 @@ class CanvasManager {
         }
     }
 
+    drawVisibilityPolygon(camera, visionData) {
+        const ctx = this.ctx;
+        const polygon = visionData.polygon;
+
+        if (!polygon || polygon.length < 3) return;
+
+        ctx.save();
+
+        // Draw the visibility polygon
+        ctx.beginPath();
+        ctx.moveTo(polygon[0].x, polygon[0].y);
+        for (let i = 1; i < polygon.length; i++) {
+            ctx.lineTo(polygon[i].x, polygon[i].y);
+        }
+        ctx.closePath();
+
+        // Fill with semi-transparent color
+        ctx.fillStyle = 'rgba(76, 175, 80, 0.15)';
+        ctx.fill();
+
+        // Optional: Draw outline
+        ctx.strokeStyle = 'rgba(76, 175, 80, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
     addObstacle(obstacle) {
         obstacle.id = this.generateId();
         this.obstacles.push(obstacle);
+        if (this.visionCalculator) {
+            this.visionCalculator.requestRecalculation();
+        }
         this.render();
     }
 
     removeObstacle(id) {
         this.obstacles = this.obstacles.filter(obs => obs.id !== id);
+        if (this.visionCalculator) {
+            this.visionCalculator.requestRecalculation();
+        }
         this.render();
     }
 
     addCamera(camera) {
         this.cameras.push(camera);
+        if (this.visionCalculator) {
+            this.visionCalculator.requestRecalculation();
+        }
         this.render();
     }
 
     removeCamera(id) {
         this.cameras = this.cameras.filter(cam => cam.id !== id);
+        if (this.visionCalculator) {
+            this.visionCalculator.requestRecalculation();
+        }
         this.render();
     }
 
@@ -171,6 +226,9 @@ class CanvasManager {
     clearAll() {
         this.obstacles = [];
         this.cameras = [];
+        if (this.visionCalculator) {
+            this.visionCalculator.requestRecalculation();
+        }
         this.render();
     }
 
