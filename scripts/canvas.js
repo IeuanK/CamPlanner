@@ -141,12 +141,17 @@ class CanvasManager {
     }
 
     findCameraAtPoint(point) {
+        console.log('Finding camera at point:', point, 'Total cameras:', this.cameras.length);
         // Search in reverse order to select topmost camera
         for (let i = this.cameras.length - 1; i >= 0; i--) {
-            if (this.cameras[i].containsPoint(point)) {
-                return this.cameras[i];
+            const camera = this.cameras[i];
+            const contains = camera.containsPoint(point);
+            console.log(`Camera ${camera.id} at (${camera.x}, ${camera.y}):`, contains);
+            if (contains) {
+                return camera;
             }
         }
+        console.log('No camera found at point');
         return null;
     }
 

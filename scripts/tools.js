@@ -76,11 +76,13 @@ class DrawingTools {
 
     handleMouseDown(e) {
         const pos = this.canvasManager.getCanvasCoordinates(e);
+        console.log('Mouse down at:', pos, 'Tool:', this.currentTool);
 
         if (this.currentTool === 'select') {
             // Check if clicking on a camera first
             const clickedCamera = this.canvasManager.findCameraAtPoint(pos);
             if (clickedCamera) {
+                console.log('Camera clicked:', clickedCamera.id);
                 this.selectedCamera = clickedCamera;
                 this.selectedObstacle = null;
                 this.cameraDragState = {
@@ -121,6 +123,7 @@ class DrawingTools {
             // Try to select a new obstacle
             const clickedObstacle = this.findObstacleAtPoint(pos);
             if (clickedObstacle) {
+                console.log('Obstacle clicked:', clickedObstacle.type, clickedObstacle.id);
                 this.selectedObstacle = clickedObstacle;
                 this.selectedCamera = null;
                 this.hideCameraProperties();
@@ -130,6 +133,7 @@ class DrawingTools {
                     window.updateStatus(`Selected ${clickedObstacle.type}`);
                 }
             } else {
+                console.log('No obstacle clicked, deselecting');
                 // Deselect if clicking on empty space
                 this.selectedObstacle = null;
                 this.selectedCamera = null;
@@ -397,13 +401,17 @@ class DrawingTools {
     // ===== SELECT MODE HELPER METHODS =====
 
     findObstacleAtPoint(point) {
+        console.log('Finding obstacle at point:', point, 'Total obstacles:', this.canvasManager.obstacles.length);
         // Search in reverse order (top to bottom) to select topmost obstacle
         for (let i = this.canvasManager.obstacles.length - 1; i >= 0; i--) {
             const obstacle = this.canvasManager.obstacles[i];
-            if (this.isPointInObstacle(point, obstacle)) {
+            const isInObstacle = this.isPointInObstacle(point, obstacle);
+            if (isInObstacle) {
+                console.log('Found obstacle:', obstacle.type, obstacle.id);
                 return obstacle;
             }
         }
+        console.log('No obstacle found at point');
         return null;
     }
 
@@ -586,15 +594,28 @@ class DrawingTools {
 
     showCameraProperties() {
         const panel = document.getElementById('properties-panel');
-        if (!panel || !this.selectedCamera) return;
+        if (!panel) {
+            console.error('Properties panel not found!');
+            return;
+        }
+        if (!this.selectedCamera) {
+            console.warn('No camera selected');
+            return;
+        }
 
+        console.log('Showing camera properties for camera:', this.selectedCamera.id);
         panel.style.display = 'block';
 
         // Populate fields with camera properties
-        document.getElementById('camera-angle').value = this.selectedCamera.angle;
-        document.getElementById('camera-fov').value = this.selectedCamera.fov;
-        document.getElementById('camera-max-distance').value = this.selectedCamera.maxDistance;
-        document.getElementById('camera-clear-distance').value = this.selectedCamera.clearDistance;
+        const angleInput = document.getElementById('camera-angle');
+        const fovInput = document.getElementById('camera-fov');
+        const maxDistanceInput = document.getElementById('camera-max-distance');
+        const clearDistanceInput = document.getElementById('camera-clear-distance');
+
+        if (angleInput) angleInput.value = this.selectedCamera.angle;
+        if (fovInput) fovInput.value = this.selectedCamera.fov;
+        if (maxDistanceInput) maxDistanceInput.value = this.selectedCamera.maxDistance;
+        if (clearDistanceInput) clearDistanceInput.value = this.selectedCamera.clearDistance;
     }
 
     hideCameraProperties() {

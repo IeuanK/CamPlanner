@@ -124,6 +124,10 @@ body {
     cursor: pointer;
 }
 
+#mainCanvas.cursor-crosshair {
+    cursor: crosshair;
+}
+
 /* Properties Panel */
 .properties-panel {
     position: absolute;
