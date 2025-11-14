@@ -77,7 +77,7 @@ class CanvasManager {
                 this.drawLine(obstacle.points);
                 break;
             case 'rectangle':
-                this.drawRectangle(obstacle.points);
+                this.drawRectangle(obstacle.points, obstacle.angle || 0);
                 break;
         }
 
@@ -106,7 +106,7 @@ class CanvasManager {
         this.ctx.stroke();
     }
 
-    drawRectangle(points) {
+    drawRectangle(points, angle = 0) {
         if (points.length < 2) return;
 
         const x = Math.min(points[0].x, points[1].x);
@@ -114,9 +114,25 @@ class CanvasManager {
         const width = Math.abs(points[1].x - points[0].x);
         const height = Math.abs(points[1].y - points[0].y);
 
-        this.ctx.beginPath();
-        this.ctx.rect(x, y, width, height);
-        this.ctx.stroke();
+        if (angle !== 0) {
+            // Draw rotated rectangle
+            const centerX = x + width / 2;
+            const centerY = y + height / 2;
+            const angleRad = (angle * Math.PI) / 180;
+
+            this.ctx.save();
+            this.ctx.translate(centerX, centerY);
+            this.ctx.rotate(angleRad);
+            this.ctx.beginPath();
+            this.ctx.rect(-width / 2, -height / 2, width, height);
+            this.ctx.stroke();
+            this.ctx.restore();
+        } else {
+            // Draw normal rectangle
+            this.ctx.beginPath();
+            this.ctx.rect(x, y, width, height);
+            this.ctx.stroke();
+        }
     }
 
     addObstacle(obstacle) {

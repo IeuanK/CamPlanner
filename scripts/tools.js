@@ -19,13 +19,14 @@ class DrawingTools {
 
         // Select mode state
         this.selectedObstacle = null;
-        this.dragState = null; // { mode: 'move'|'resize', handleIndex: number, startPos: {x,y}, originalPoints: [...] }
+        this.dragState = null; // { mode: 'move'|'resize'|'rotate', handleIndex: number, startPos: {x,y}, originalPoints: [...], startAngle: number }
         this.hoverHandle = null;
+        this.hoverRotationHandle = false;
         this.shiftPressed = false;
 
         // Camera mode state
         this.selectedCamera = null;
-        this.cameraDragState = null; // { mode: 'move'|'rotate', startPos, startAngle }
+        this.cameraDragState = null; // { mode: 'move'|'rotate'|'fov-left'|'fov-right'|'range'|'clear-range', startPos, startAngle, startValue, side }
 
         this.setupEventListeners();
     }
@@ -78,12 +79,13 @@ class DrawingTools {
         const pos = this.canvasManager.getCanvasCoordinates(e);
 
         if (this.currentTool === 'select') {
-            // Check if clicking on rotation handle of selected camera first
+            // Check if clicking on handles of selected camera first
             if (this.selectedCamera) {
+                // Check rotation handle
                 const rotationHandle = this.canvasManager.cameraRenderer.getRotationHandlePosition(this.selectedCamera);
-                const dx = pos.x - rotationHandle.x;
-                const dy = pos.y - rotationHandle.y;
-                const distToHandle = Math.sqrt(dx * dx + dy * dy);
+                let dx = pos.x - rotationHandle.x;
+                let dy = pos.y - rotationHandle.y;
+                let distToHandle = Math.sqrt(dx * dx + dy * dy);
 
                 if (distToHandle <= rotationHandle.radius) {
                     console.log('Rotation handle clicked');
@@ -91,6 +93,73 @@ class DrawingTools {
                         mode: 'rotate',
                         startPos: pos,
                         startAngle: this.selectedCamera.angle
+                    };
+                    return;
+                }
+
+                // Check FOV handles
+                const fovHandles = this.canvasManager.cameraRenderer.getFOVHandlePositions(this.selectedCamera);
+
+                dx = pos.x - fovHandles.left.x;
+                dy = pos.y - fovHandles.left.y;
+                distToHandle = Math.sqrt(dx * dx + dy * dy);
+
+                if (distToHandle <= fovHandles.left.radius) {
+                    console.log('Left FOV handle clicked');
+                    this.cameraDragState = {
+                        mode: 'fov',
+                        side: 'left',
+                        startPos: pos,
+                        startFOV: this.selectedCamera.fov,
+                        startAngle: this.selectedCamera.angle
+                    };
+                    return;
+                }
+
+                dx = pos.x - fovHandles.right.x;
+                dy = pos.y - fovHandles.right.y;
+                distToHandle = Math.sqrt(dx * dx + dy * dy);
+
+                if (distToHandle <= fovHandles.right.radius) {
+                    console.log('Right FOV handle clicked');
+                    this.cameraDragState = {
+                        mode: 'fov',
+                        side: 'right',
+                        startPos: pos,
+                        startFOV: this.selectedCamera.fov,
+                        startAngle: this.selectedCamera.angle
+                    };
+                    return;
+                }
+
+                // Check range handle
+                const rangeHandle = this.canvasManager.cameraRenderer.getRangeHandlePosition(this.selectedCamera);
+                dx = pos.x - rangeHandle.x;
+                dy = pos.y - rangeHandle.y;
+                distToHandle = Math.sqrt(dx * dx + dy * dy);
+
+                if (distToHandle <= rangeHandle.radius) {
+                    console.log('Range handle clicked');
+                    this.cameraDragState = {
+                        mode: 'range',
+                        startPos: pos,
+                        startDistance: this.selectedCamera.maxDistance
+                    };
+                    return;
+                }
+
+                // Check clear range handle
+                const clearRangeHandle = this.canvasManager.cameraRenderer.getClearRangeHandlePosition(this.selectedCamera);
+                dx = pos.x - clearRangeHandle.x;
+                dy = pos.y - clearRangeHandle.y;
+                distToHandle = Math.sqrt(dx * dx + dy * dy);
+
+                if (distToHandle <= clearRangeHandle.radius) {
+                    console.log('Clear range handle clicked');
+                    this.cameraDragState = {
+                        mode: 'clear-range',
+                        startPos: pos,
+                        startDistance: this.selectedCamera.clearDistance
                     };
                     return;
                 }
@@ -113,6 +182,17 @@ class DrawingTools {
                 if (window.updateStatus) {
                     window.updateStatus(`Selected camera`);
                 }
+                return;
+            }
+
+            // Check if clicking on rotation handle of selected rectangle
+            if (this.selectedObstacle && this.selectedObstacle.type === 'rectangle' && this.hoverRotationHandle) {
+                this.dragState = {
+                    mode: 'rotate',
+                    startPos: pos,
+                    startAngle: this.selectedObstacle.angle || 0,
+                    center: this.getRectangleCenter(this.selectedObstacle)
+                };
                 return;
             }
 
@@ -213,25 +293,103 @@ class DrawingTools {
                     if (angleInput) {
                         angleInput.value = Math.round(angleDeg);
                     }
+                } else if (this.cameraDragState.mode === 'fov' && this.selectedCamera) {
+                    // Calculate angle from camera to mouse
+                    const dx = pos.x - this.selectedCamera.x;
+                    const dy = pos.y - this.selectedCamera.y;
+                    const mouseAngle = Math.atan2(dy, dx);
+
+                    // Calculate the new FOV based on which handle is being dragged
+                    const centerAngleRad = (this.cameraDragState.startAngle * Math.PI) / 180;
+                    const startFOVRad = (this.cameraDragState.startFOV * Math.PI) / 180;
+
+                    let newFOV;
+                    if (this.cameraDragState.side === 'left') {
+                        // Left handle: angle from mouse to center angle
+                        let angleDiff = centerAngleRad - mouseAngle;
+                        // Normalize angle to [-PI, PI]
+                        while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                        while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                        newFOV = Math.abs(angleDiff) * 2;
+                    } else {
+                        // Right handle: angle from center angle to mouse
+                        let angleDiff = mouseAngle - centerAngleRad;
+                        // Normalize angle to [-PI, PI]
+                        while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                        while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                        newFOV = Math.abs(angleDiff) * 2;
+                    }
+
+                    // Convert to degrees and clamp
+                    newFOV = (newFOV * 180) / Math.PI;
+                    newFOV = Math.max(10, Math.min(180, newFOV));
+
+                    this.selectedCamera.fov = newFOV;
+                    this.canvasManager.render(this.selectedCamera);
+
+                    // Update properties panel
+                    const fovInput = document.getElementById('camera-fov');
+                    if (fovInput) {
+                        fovInput.value = Math.round(newFOV);
+                    }
+                } else if (this.cameraDragState.mode === 'range' && this.selectedCamera) {
+                    // Calculate distance from camera to mouse
+                    const dx = pos.x - this.selectedCamera.x;
+                    const dy = pos.y - this.selectedCamera.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    // Update max distance, clamped to reasonable values
+                    this.selectedCamera.maxDistance = Math.max(50, Math.min(1000, distance));
+                    this.canvasManager.render(this.selectedCamera);
+
+                    // Update properties panel
+                    const maxDistanceInput = document.getElementById('camera-max-distance');
+                    if (maxDistanceInput) {
+                        maxDistanceInput.value = Math.round(this.selectedCamera.maxDistance);
+                    }
+                } else if (this.cameraDragState.mode === 'clear-range' && this.selectedCamera) {
+                    // Calculate distance from camera to mouse
+                    const dx = pos.x - this.selectedCamera.x;
+                    const dy = pos.y - this.selectedCamera.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    // Update clear distance, clamped to reasonable values and not exceeding max distance
+                    this.selectedCamera.clearDistance = Math.max(50, Math.min(this.selectedCamera.maxDistance, distance));
+                    this.canvasManager.render(this.selectedCamera);
+
+                    // Update properties panel
+                    const clearDistanceInput = document.getElementById('camera-clear-distance');
+                    if (clearDistanceInput) {
+                        clearDistanceInput.value = Math.round(this.selectedCamera.clearDistance);
+                    }
                 }
                 return;
             }
 
-            // If dragging/resizing obstacle
+            // If dragging/resizing/rotating obstacle
             if (this.dragState) {
                 if (this.dragState.mode === 'move') {
                     this.moveObstacle(pos);
                 } else if (this.dragState.mode === 'resize') {
                     this.resizeObstacle(pos);
+                } else if (this.dragState.mode === 'rotate') {
+                    this.rotateRectangle(pos);
                 }
                 return;
             }
 
-            // Update hover state for resize handles
+            // Update hover state for resize and rotation handles
             if (this.selectedObstacle) {
                 const handleIndex = this.getHandleAtPoint(pos);
-                if (handleIndex !== this.hoverHandle) {
+                let rotationHandleHover = false;
+
+                if (this.selectedObstacle.type === 'rectangle') {
+                    rotationHandleHover = this.isPointOnRotationHandle(pos);
+                }
+
+                if (handleIndex !== this.hoverHandle || rotationHandleHover !== this.hoverRotationHandle) {
                     this.hoverHandle = handleIndex;
+                    this.hoverRotationHandle = rotationHandleHover;
                     this.canvasManager.render();
                     this.drawSelection();
                 }
@@ -404,6 +562,11 @@ class DrawingTools {
             thickness: this.thickness
         };
 
+        // Add angle property for rectangles
+        if (this.currentTool === 'rectangle') {
+            obstacle.angle = 0;
+        }
+
         this.canvasManager.addObstacle(obstacle);
 
         // Update status
@@ -559,11 +722,20 @@ class DrawingTools {
         if (!this.selectedObstacle || !this.dragState) return;
 
         const handleIndex = this.dragState.handleIndex;
+        let newPoint = currentPos;
+
+        // Apply shift-snapping for lines
+        if (this.selectedObstacle.type === 'line' && this.shiftPressed) {
+            // Get the other point (not being dragged)
+            const otherIndex = handleIndex === 0 ? 1 : 0;
+            const anchorPoint = this.selectedObstacle.points[otherIndex];
+            newPoint = this.snapToAngles(anchorPoint, currentPos);
+        }
 
         // Update the specific handle point
         this.selectedObstacle.points[handleIndex] = {
-            x: currentPos.x,
-            y: currentPos.y
+            x: newPoint.x,
+            y: newPoint.y
         };
 
         this.canvasManager.render();
@@ -615,6 +787,41 @@ class DrawingTools {
             ctx.strokeRect(points[i].x - size / 2, points[i].y - size / 2, size, size);
         }
 
+        // Draw rotation handle for rectangles
+        if (this.selectedObstacle.type === 'rectangle') {
+            const handle = this.getRotationHandlePosition(this.selectedObstacle);
+            if (handle) {
+                const center = this.getRectangleCenter(this.selectedObstacle);
+
+                // Draw connecting line (dashed)
+                ctx.beginPath();
+                ctx.moveTo(center.x, center.y);
+                ctx.lineTo(handle.x, handle.y);
+                ctx.strokeStyle = '#4fc3f7';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([3, 3]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Draw rotation handle circle
+                const size = this.hoverRotationHandle ? 10 : 8;
+                ctx.beginPath();
+                ctx.arc(handle.x, handle.y, size, 0, Math.PI * 2);
+                ctx.fillStyle = '#4fc3f7';
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw rotation icon (curved arrow)
+                ctx.beginPath();
+                ctx.arc(handle.x, handle.y, size * 0.5, 0.5, Math.PI * 1.5);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            }
+        }
+
         ctx.restore();
     }
 
@@ -628,6 +835,68 @@ class DrawingTools {
         if (window.updateStatus) {
             window.updateStatus('Shape deleted');
         }
+    }
+
+    // ===== RECTANGLE ROTATION METHODS =====
+
+    getRectangleCenter(rectangle) {
+        const x = Math.min(rectangle.points[0].x, rectangle.points[1].x);
+        const y = Math.min(rectangle.points[0].y, rectangle.points[1].y);
+        const width = Math.abs(rectangle.points[1].x - rectangle.points[0].x);
+        const height = Math.abs(rectangle.points[1].y - rectangle.points[0].y);
+        return {
+            x: x + width / 2,
+            y: y + height / 2
+        };
+    }
+
+    rotateRectangle(currentPos) {
+        if (!this.selectedObstacle || !this.dragState || this.dragState.mode !== 'rotate') return;
+
+        const center = this.dragState.center;
+        const dx = currentPos.x - center.x;
+        const dy = currentPos.y - center.y;
+        let angleRad = Math.atan2(dy, dx);
+        let angleDeg = (angleRad * 180) / Math.PI;
+
+        // Apply shift-snapping for rotation
+        if (this.shiftPressed) {
+            // Snap to 15 degree increments
+            const snapAngle = 15;
+            angleDeg = Math.round(angleDeg / snapAngle) * snapAngle;
+        }
+
+        this.selectedObstacle.angle = angleDeg;
+        this.canvasManager.render();
+        this.drawSelection();
+    }
+
+    getRotationHandlePosition(rectangle) {
+        if (!rectangle || rectangle.type !== 'rectangle') return null;
+
+        const center = this.getRectangleCenter(rectangle);
+        const handleDistance = 50;
+        const angle = (rectangle.angle || 0);
+        const angleRad = (angle * Math.PI) / 180;
+
+        return {
+            x: center.x + Math.cos(angleRad) * handleDistance,
+            y: center.y + Math.sin(angleRad) * handleDistance,
+            radius: 8
+        };
+    }
+
+    isPointOnRotationHandle(point) {
+        if (!this.selectedObstacle || this.selectedObstacle.type !== 'rectangle') return false;
+
+        const handle = this.getRotationHandlePosition(this.selectedObstacle);
+        if (!handle) return false;
+
+        const dx = point.x - handle.x;
+        const dy = point.y - handle.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        return dist <= handle.radius;
     }
 
     // ===== CAMERA PROPERTIES PANEL =====

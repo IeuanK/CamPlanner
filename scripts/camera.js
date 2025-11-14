@@ -92,9 +92,12 @@ class CameraRenderer {
         // Draw direction indicator
         this.drawDirectionIndicator(camera);
 
-        // Draw rotation handle if selected
+        // Draw handles if selected
         if (isSelected) {
             this.drawRotationHandle(camera);
+            this.drawFOVHandles(camera);
+            this.drawRangeHandle(camera);
+            this.drawClearRangeHandle(camera);
         }
 
         ctx.restore();
@@ -276,6 +279,142 @@ class CameraRenderer {
             x: camera.x + Math.cos(angleRad) * handleDistance,
             y: camera.y + Math.sin(angleRad) * handleDistance,
             radius: 8
+        };
+    }
+
+    // Draw FOV handles (left and right edges of FOV cone)
+    drawFOVHandles(camera) {
+        const ctx = this.ctx;
+        const angleRad = (camera.angle * Math.PI) / 180;
+        const fovRad = (camera.fov * Math.PI) / 180;
+
+        const leftAngle = angleRad - fovRad / 2;
+        const rightAngle = angleRad + fovRad / 2;
+
+        const handleRadius = 6;
+        const distance = camera.maxDistance;
+
+        // Left FOV handle
+        const leftX = camera.x + Math.cos(leftAngle) * distance;
+        const leftY = camera.y + Math.sin(leftAngle) * distance;
+
+        ctx.beginPath();
+        ctx.arc(leftX, leftY, handleRadius, 0, Math.PI * 2);
+        ctx.fillStyle = '#ff9800';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Right FOV handle
+        const rightX = camera.x + Math.cos(rightAngle) * distance;
+        const rightY = camera.y + Math.sin(rightAngle) * distance;
+
+        ctx.beginPath();
+        ctx.arc(rightX, rightY, handleRadius, 0, Math.PI * 2);
+        ctx.fillStyle = '#ff9800';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    // Draw range handle (at the center of max distance arc)
+    drawRangeHandle(camera) {
+        const ctx = this.ctx;
+        const angleRad = (camera.angle * Math.PI) / 180;
+        const handleRadius = 6;
+
+        const handleX = camera.x + Math.cos(angleRad) * camera.maxDistance;
+        const handleY = camera.y + Math.sin(angleRad) * camera.maxDistance;
+
+        ctx.beginPath();
+        ctx.arc(handleX, handleY, handleRadius, 0, Math.PI * 2);
+        ctx.fillStyle = '#f44336';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw small arrow indicators
+        const arrowSize = 4;
+        ctx.beginPath();
+        ctx.moveTo(handleX - arrowSize, handleY);
+        ctx.lineTo(handleX + arrowSize, handleY);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    // Draw clear range handle (at the center of clear distance arc)
+    drawClearRangeHandle(camera) {
+        const ctx = this.ctx;
+        const angleRad = (camera.angle * Math.PI) / 180;
+        const handleRadius = 6;
+
+        const handleX = camera.x + Math.cos(angleRad) * camera.clearDistance;
+        const handleY = camera.y + Math.sin(angleRad) * camera.clearDistance;
+
+        ctx.beginPath();
+        ctx.arc(handleX, handleY, handleRadius, 0, Math.PI * 2);
+        ctx.fillStyle = '#4caf50';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw small arrow indicators
+        const arrowSize = 4;
+        ctx.beginPath();
+        ctx.moveTo(handleX - arrowSize, handleY);
+        ctx.lineTo(handleX + arrowSize, handleY);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    // Get FOV handle positions for hit testing
+    getFOVHandlePositions(camera) {
+        const angleRad = (camera.angle * Math.PI) / 180;
+        const fovRad = (camera.fov * Math.PI) / 180;
+
+        const leftAngle = angleRad - fovRad / 2;
+        const rightAngle = angleRad + fovRad / 2;
+        const distance = camera.maxDistance;
+
+        return {
+            left: {
+                x: camera.x + Math.cos(leftAngle) * distance,
+                y: camera.y + Math.sin(leftAngle) * distance,
+                radius: 6,
+                angle: leftAngle
+            },
+            right: {
+                x: camera.x + Math.cos(rightAngle) * distance,
+                y: camera.y + Math.sin(rightAngle) * distance,
+                radius: 6,
+                angle: rightAngle
+            }
+        };
+    }
+
+    // Get range handle position for hit testing
+    getRangeHandlePosition(camera) {
+        const angleRad = (camera.angle * Math.PI) / 180;
+        return {
+            x: camera.x + Math.cos(angleRad) * camera.maxDistance,
+            y: camera.y + Math.sin(angleRad) * camera.maxDistance,
+            radius: 6
+        };
+    }
+
+    // Get clear range handle position for hit testing
+    getClearRangeHandlePosition(camera) {
+        const angleRad = (camera.angle * Math.PI) / 180;
+        return {
+            x: camera.x + Math.cos(angleRad) * camera.clearDistance,
+            y: camera.y + Math.sin(angleRad) * camera.clearDistance,
+            radius: 6
         };
     }
 }
