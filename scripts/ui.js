@@ -8,8 +8,10 @@ class UIController {
         this.canvasManager = canvasManager;
         this.drawingTools = drawingTools;
         this.currentTool = 'freehand';
+        this.currentViewMode = 'fog';
 
         this.setupToolButtons();
+        this.setupViewModeButtons();
         this.setupActionButtons();
         this.setupCameraControls();
         this.setupStatusBar();
@@ -54,6 +56,61 @@ class UIController {
         } else {
             canvas.classList.add('cursor-crosshair');
             this.updateStatus(`${tool.charAt(0).toUpperCase() + tool.slice(1)} tool selected - Draw on canvas`);
+        }
+    }
+
+    setupViewModeButtons() {
+        const modeButtons = document.querySelectorAll('.mode-btn');
+
+        modeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                if (button.disabled) return;
+
+                const mode = button.dataset.mode;
+                this.selectViewMode(mode);
+            });
+        });
+    }
+
+    selectViewMode(mode) {
+        // If clicking the same mode, toggle it off
+        if (this.currentViewMode === mode) {
+            this.currentViewMode = null;
+
+            // Remove active state from all buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Disable vision calculation
+            if (this.canvasManager.visionCalculator) {
+                this.canvasManager.visionCalculator.setEnabled(false);
+                this.updateStatus('Vision view disabled');
+            }
+            return;
+        }
+
+        this.currentViewMode = mode;
+
+        // Update button states
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        const activeButton = document.querySelector(`[data-mode="${mode}"]`);
+        if (activeButton) {
+            activeButton.classList.add('active');
+        }
+
+        // Toggle vision calculation based on mode
+        if (this.canvasManager.visionCalculator) {
+            if (mode === 'fog') {
+                this.canvasManager.visionCalculator.setEnabled(true);
+                this.updateStatus('Fog view enabled - Visibility areas shown');
+            } else if (mode === 'heatmap') {
+                // Heatmap mode not yet implemented (Phase 5)
+                this.updateStatus('Heatmap mode not yet implemented');
+            }
         }
     }
 
