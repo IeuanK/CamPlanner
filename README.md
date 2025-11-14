@@ -21,11 +21,18 @@ A web-based application for planning security camera layouts in physical spaces.
 
 ## How to Use
 
-### Getting Started
+### Live Demo
 
-1. Open `index.html` in a modern web browser
-2. Select a drawing tool from the toolbar
-3. Draw obstacles on the white canvas
+The app is automatically deployed to GitHub Pages on every commit to the main branch.
+
+### Local Development
+
+1. Clone the repository
+2. Open `index.html` in a modern web browser
+3. Select a drawing tool from the toolbar
+4. Draw obstacles on the white canvas
+
+No build process required - it's a static site!
 
 ### Drawing Tools
 
@@ -63,7 +70,10 @@ A web-based application for planning security camera layouts in physical spaces.
 ### File Structure
 ```
 camera-planner/
-├── index.html           # Main HTML file
+├── .github/
+│   └── workflows/
+│       └── deploy.yml  # GitHub Pages deployment
+├── index.html          # Main HTML file
 ├── styles/
 │   └── main.css        # Application styles
 ├── scripts/
@@ -83,6 +93,17 @@ Tested on:
 - Safari (latest)
 
 Requires HTML5 Canvas support.
+
+## Deployment
+
+This project uses GitHub Actions to automatically deploy to GitHub Pages on every push to the main branch.
+
+**Setup Requirements:**
+1. Enable GitHub Pages in repository settings
+2. Set Pages source to "GitHub Actions"
+3. Push to main branch to trigger deployment
+
+The workflow file is located at `.github/workflows/deploy.yml`.
 
 ## Development
 
