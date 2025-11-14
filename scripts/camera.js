@@ -92,6 +92,11 @@ class CameraRenderer {
         // Draw direction indicator
         this.drawDirectionIndicator(camera);
 
+        // Draw rotation handle if selected
+        if (isSelected) {
+            this.drawRotationHandle(camera);
+        }
+
         ctx.restore();
     }
 
@@ -210,5 +215,67 @@ class CameraRenderer {
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 3;
         ctx.stroke();
+    }
+
+    drawRotationHandle(camera) {
+        const ctx = this.ctx;
+        const handleDistance = 40; // Distance from camera center
+        const handleRadius = 8;
+        const angleRad = (camera.angle * Math.PI) / 180;
+
+        // Calculate handle position
+        const handleX = camera.x + Math.cos(angleRad) * handleDistance;
+        const handleY = camera.y + Math.sin(angleRad) * handleDistance;
+
+        // Draw connecting line (dashed)
+        ctx.beginPath();
+        ctx.moveTo(camera.x, camera.y);
+        ctx.lineTo(handleX, handleY);
+        ctx.strokeStyle = '#4fc3f7';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw rotation handle circle
+        ctx.beginPath();
+        ctx.arc(handleX, handleY, handleRadius, 0, Math.PI * 2);
+        ctx.fillStyle = '#4fc3f7';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw rotation icon (curved arrow)
+        ctx.beginPath();
+        ctx.arc(handleX, handleY, handleRadius * 0.5, 0.5, Math.PI * 1.5);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Small arrow tip
+        const tipAngle = Math.PI * 1.5;
+        const tipSize = 3;
+        ctx.beginPath();
+        ctx.moveTo(
+            handleX + Math.cos(tipAngle) * handleRadius * 0.5,
+            handleY + Math.sin(tipAngle) * handleRadius * 0.5
+        );
+        ctx.lineTo(
+            handleX + Math.cos(tipAngle) * handleRadius * 0.5 + tipSize * Math.cos(tipAngle - 0.5),
+            handleY + Math.sin(tipAngle) * handleRadius * 0.5 + tipSize * Math.sin(tipAngle - 0.5)
+        );
+        ctx.stroke();
+    }
+
+    // Get rotation handle position for hit testing
+    getRotationHandlePosition(camera) {
+        const handleDistance = 40;
+        const angleRad = (camera.angle * Math.PI) / 180;
+        return {
+            x: camera.x + Math.cos(angleRad) * handleDistance,
+            y: camera.y + Math.sin(angleRad) * handleDistance,
+            radius: 8
+        };
     }
 }
