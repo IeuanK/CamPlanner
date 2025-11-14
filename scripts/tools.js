@@ -78,7 +78,25 @@ class DrawingTools {
         const pos = this.canvasManager.getCanvasCoordinates(e);
 
         if (this.currentTool === 'select') {
-            // Check if clicking on a camera first
+            // Check if clicking on rotation handle of selected camera first
+            if (this.selectedCamera) {
+                const rotationHandle = this.canvasManager.cameraRenderer.getRotationHandlePosition(this.selectedCamera);
+                const dx = pos.x - rotationHandle.x;
+                const dy = pos.y - rotationHandle.y;
+                const distToHandle = Math.sqrt(dx * dx + dy * dy);
+
+                if (distToHandle <= rotationHandle.radius) {
+                    console.log('Rotation handle clicked');
+                    this.cameraDragState = {
+                        mode: 'rotate',
+                        startPos: pos,
+                        startAngle: this.selectedCamera.angle
+                    };
+                    return;
+                }
+            }
+
+            // Check if clicking on a camera
             const clickedCamera = this.canvasManager.findCameraAtPoint(pos);
             if (clickedCamera) {
                 console.log('Camera clicked:', clickedCamera.id);
@@ -179,6 +197,22 @@ class DrawingTools {
                     this.selectedCamera.x = this.cameraDragState.startX + dx;
                     this.selectedCamera.y = this.cameraDragState.startY + dy;
                     this.canvasManager.render(this.selectedCamera);
+                } else if (this.cameraDragState.mode === 'rotate' && this.selectedCamera) {
+                    // Calculate angle from camera center to mouse position
+                    const dx = pos.x - this.selectedCamera.x;
+                    const dy = pos.y - this.selectedCamera.y;
+                    const angleRad = Math.atan2(dy, dx);
+                    const angleDeg = (angleRad * 180) / Math.PI;
+
+                    // Update camera angle
+                    this.selectedCamera.angle = angleDeg;
+                    this.canvasManager.render(this.selectedCamera);
+
+                    // Update properties panel
+                    const angleInput = document.getElementById('camera-angle');
+                    if (angleInput) {
+                        angleInput.value = Math.round(angleDeg);
+                    }
                 }
                 return;
             }
@@ -210,10 +244,21 @@ class DrawingTools {
         }
 
         if (this.currentTool === 'freehand') {
-            // Add point to freehand path
-            this.currentPoints.push(pos);
-            this.previewPoints.push(pos);
-            this.drawPreview();
+            // Add point to freehand path only if it's far enough from the last point
+            const minDistance = 2; // pixels
+            const lastPoint = this.currentPoints[this.currentPoints.length - 1];
+
+            if (lastPoint) {
+                const dx = pos.x - lastPoint.x;
+                const dy = pos.y - lastPoint.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance >= minDistance) {
+                    this.currentPoints.push(pos);
+                    this.previewPoints.push(pos);
+                    this.drawPreview();
+                }
+            }
         } else if (this.currentTool === 'line') {
             // Update end point for line preview with optional shift-snapping
             let endPoint = pos;
