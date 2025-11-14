@@ -7,11 +7,13 @@ A web-based application for planning security camera layouts in physical spaces.
 **Implemented Features:**
 - ✅ HTML5 Canvas setup with responsive design
 - ✅ Freehand drawing tool
-- ✅ Line drawing tool
+- ✅ Line drawing tool with shift-snap to 16 directions
 - ✅ Rectangle drawing tool
+- ✅ Select tool with drag and resize (Figma-style)
 - ✅ Basic UI with tool selection
 - ✅ Clear canvas functionality
 - ✅ Cursor position tracking
+- ✅ Delete shapes with Delete/Backspace key
 
 **Coming Soon:**
 - Camera placement and configuration (Phase 2)
@@ -34,7 +36,14 @@ The app is automatically deployed to GitHub Pages on every commit to the main br
 
 No build process required - it's a static site!
 
-### Drawing Tools
+### Tools
+
+**Select Tool**
+- Click on any shape to select it
+- Drag selected shapes to move them
+- Drag the resize handles (blue squares) to resize
+- Press Delete or Backspace to remove selected shape
+- Click empty space to deselect
 
 **Freehand Tool**
 - Click and drag to draw free-form lines
@@ -43,6 +52,7 @@ No build process required - it's a static site!
 **Line Tool**
 - Click to set the start point
 - Move mouse to preview the line
+- **Hold Shift** to snap to 16 directions (0°, 22.5°, 45°, etc.)
 - Click again to set the end point
 
 **Rectangle Tool**
@@ -107,11 +117,13 @@ The workflow file is located at `.github/workflows/deploy.yml`.
 
 ## Development
 
-### Current Phase: Phase 1 - Basic Drawing ✓
+### Current Phase: Phase 1+ - Enhanced Drawing ✓
 
 Phase 1 focuses on the foundational drawing capabilities:
 - Canvas setup and management
 - Three drawing tools (freehand, line, rectangle)
+- Select tool with Figma-style manipulation
+- Line tool with shift-snap to 16 directions
 - Basic UI and user interactions
 - Shape storage and rendering
 
@@ -130,4 +142,4 @@ MIT License - See SPECS.md for full project details.
 
 ## Version
 
-**v0.1.0** - Phase 1 Complete (Basic Drawing)
+**v0.2.0** - Phase 1+ Complete (Enhanced Drawing with Select & Shift-Snap)
