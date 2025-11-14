@@ -79,12 +79,14 @@ class CameraRenderer {
         this.ctx = ctx;
     }
 
-    drawCamera(camera, isSelected = false) {
+    drawCamera(camera, isSelected = false, showFOVCone = true) {
         const ctx = this.ctx;
         ctx.save();
 
-        // Draw FOV cone
-        this.drawFOVCone(camera, isSelected);
+        // Draw FOV cone (only if showFOVCone is true)
+        if (showFOVCone) {
+            this.drawFOVCone(camera, isSelected);
+        }
 
         // Draw camera body
         this.drawCameraBody(camera, isSelected);
