@@ -53,9 +53,16 @@ class RayCaster {
             { p1: {x: -margin, y: canvasBounds.height + margin}, p2: {x: -margin, y: -margin} } // Left
         );
 
+        console.log(`Processing ${obstacles.length} obstacles`);
+
         // Extract segments from obstacles
         for (const obstacle of obstacles) {
-            if (!obstacle.points || obstacle.points.length === 0) continue;
+            if (!obstacle.points || obstacle.points.length === 0) {
+                console.log('Skipping obstacle with no points');
+                continue;
+            }
+
+            console.log(`Processing ${obstacle.type} obstacle with ${obstacle.points.length} points`);
 
             if (obstacle.type === 'line') {
                 if (obstacle.points.length >= 2) {
@@ -63,6 +70,7 @@ class RayCaster {
                         p1: obstacle.points[0],
                         p2: obstacle.points[1]
                     });
+                    console.log('Added line segment');
                 }
             } else if (obstacle.type === 'freehand') {
                 // Each consecutive pair of points forms a segment
@@ -72,6 +80,7 @@ class RayCaster {
                         p2: obstacle.points[i + 1]
                     });
                 }
+                console.log(`Added ${obstacle.points.length - 1} freehand segments`);
             } else if (obstacle.type === 'rectangle') {
                 const corners = this.getRectangleCorners(obstacle);
                 // Create 4 segments from the corners
@@ -81,9 +90,11 @@ class RayCaster {
                         p2: corners[(i + 1) % 4]
                     });
                 }
+                console.log('Added 4 rectangle segments');
             }
         }
 
+        console.log(`Total segments: ${segments.length} (4 boundaries + ${segments.length - 4} obstacle segments)`);
         return segments;
     }
 

@@ -59,9 +59,10 @@ class CanvasManager {
 
         // Draw all cameras (so obstacles appear on top)
         if (this.cameraRenderer) {
+            const showFOVCone = !(this.visionCalculator && this.visionCalculator.isEnabled());
             this.cameras.forEach(camera => {
                 const isSelected = selectedCamera && selectedCamera.id === camera.id;
-                this.cameraRenderer.drawCamera(camera, isSelected);
+                this.cameraRenderer.drawCamera(camera, isSelected, showFOVCone);
             });
         }
 
