@@ -9,6 +9,7 @@ class CanvasManager {
         this.ctx = this.canvas.getContext('2d');
         this.obstacles = [];
         this.cameras = [];
+        this.cameraRenderer = null;
 
         this.init();
     }
@@ -16,6 +17,10 @@ class CanvasManager {
     init() {
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
+    }
+
+    setCameraRenderer(renderer) {
+        this.cameraRenderer = renderer;
     }
 
     resizeCanvas() {
@@ -34,15 +39,21 @@ class CanvasManager {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-    render() {
+    render(selectedCamera = null) {
         this.clear();
+
+        // Draw all cameras first (so obstacles appear on top)
+        if (this.cameraRenderer) {
+            this.cameras.forEach(camera => {
+                const isSelected = selectedCamera && selectedCamera.id === camera.id;
+                this.cameraRenderer.drawCamera(camera, isSelected);
+            });
+        }
 
         // Draw all obstacles
         this.obstacles.forEach(obstacle => {
             this.drawObstacle(obstacle);
         });
-
-        // TODO: Draw cameras (Phase 2)
     }
 
     drawObstacle(obstacle) {
@@ -117,6 +128,26 @@ class CanvasManager {
     removeObstacle(id) {
         this.obstacles = this.obstacles.filter(obs => obs.id !== id);
         this.render();
+    }
+
+    addCamera(camera) {
+        this.cameras.push(camera);
+        this.render();
+    }
+
+    removeCamera(id) {
+        this.cameras = this.cameras.filter(cam => cam.id !== id);
+        this.render();
+    }
+
+    findCameraAtPoint(point) {
+        // Search in reverse order to select topmost camera
+        for (let i = this.cameras.length - 1; i >= 0; i--) {
+            if (this.cameras[i].containsPoint(point)) {
+                return this.cameras[i];
+            }
+        }
+        return null;
     }
 
     clearAll() {

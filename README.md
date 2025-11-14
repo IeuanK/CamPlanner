@@ -2,7 +2,7 @@
 
 A web-based application for planning security camera layouts in physical spaces. Draw floor plans, place cameras with configurable parameters, and visualize coverage areas to optimize camera placement.
 
-## Current Status: Phase 1 Complete ✓
+## Current Status: Phase 2 Complete ✓
 
 **Implemented Features:**
 - ✅ HTML5 Canvas setup with responsive design
@@ -10,13 +10,18 @@ A web-based application for planning security camera layouts in physical spaces.
 - ✅ Line drawing tool with shift-snap to 16 directions
 - ✅ Rectangle drawing tool
 - ✅ Select tool with drag and resize (Figma-style)
+- ✅ Camera placement tool
+- ✅ Camera configuration (angle, FOV, distances)
+- ✅ Visual FOV cone rendering
+- ✅ Camera selection and dragging
+- ✅ Camera properties panel
+- ✅ Camera duplication
 - ✅ Basic UI with tool selection
 - ✅ Clear canvas functionality
 - ✅ Cursor position tracking
 - ✅ Delete shapes with Delete/Backspace key
 
 **Coming Soon:**
-- Camera placement and configuration (Phase 2)
 - Ray-casting vision calculation (Phase 3)
 - Fog of war visualization (Phase 4)
 - Heatmap coverage mode (Phase 5)
@@ -60,6 +65,23 @@ No build process required - it's a static site!
 - Move mouse to preview the rectangle
 - Click again to set the opposite corner
 
+**Camera Tool**
+- Click anywhere to place a camera
+- Cameras show a blue circle with direction arrow
+- FOV cone is displayed (lighter = max distance, darker = clear distance)
+- Select a camera to configure its properties
+
+### Camera Configuration
+
+When a camera is selected, the properties panel appears with:
+
+- **Angle**: Direction the camera is facing (0° = right, 90° = down, etc.)
+- **Field of View (FOV)**: Angular width of camera view (typically 60-120°)
+- **Max Distance**: How far the camera can see (with degraded quality)
+- **Clear Distance**: Distance within which the camera has perfect clarity
+- **Duplicate**: Create a copy of the selected camera
+- **Delete**: Remove the selected camera
+
 ### Interface
 
 **Toolbar** (top)
@@ -89,6 +111,7 @@ camera-planner/
 ├── scripts/
 │   ├── app.js          # Main application entry point
 │   ├── canvas.js       # Canvas management
+│   ├── camera.js       # Camera class and renderer
 │   ├── tools.js        # Drawing tools implementation
 │   └── ui.js           # UI controller
 ├── SPECS.md            # Full technical specifications
@@ -117,9 +140,9 @@ The workflow file is located at `.github/workflows/deploy.yml`.
 
 ## Development
 
-### Current Phase: Phase 1+ - Enhanced Drawing ✓
+### Phase 1 - Enhanced Drawing ✓
 
-Phase 1 focuses on the foundational drawing capabilities:
+Foundational drawing capabilities:
 - Canvas setup and management
 - Three drawing tools (freehand, line, rectangle)
 - Select tool with Figma-style manipulation
@@ -127,14 +150,24 @@ Phase 1 focuses on the foundational drawing capabilities:
 - Basic UI and user interactions
 - Shape storage and rendering
 
-### Next Phase: Phase 2 - Camera System
+### Phase 2 - Camera System ✓
+
+Camera placement and configuration:
+- Camera class with position, angle, FOV, and distances
+- Camera placement tool
+- Visual FOV cone rendering with two zones (clear/max distance)
+- Camera selection and dragging
+- Properties panel for real-time camera configuration
+- Camera duplication functionality
+- Integration with select tool
+
+### Next Phase: Phase 3 - Vision Calculation
 
 Upcoming features:
-- Camera placement on canvas
-- Camera configuration panel
-- Adjustable angle, FOV, distances
-- Camera selection and manipulation
-- Camera duplication
+- Ray-casting algorithm for line-of-sight
+- Obstacle detection and occlusion
+- Vision polygon generation
+- Debounced recalculation system
 
 ## License
 
@@ -142,4 +175,4 @@ MIT License - See SPECS.md for full project details.
 
 ## Version
 
-**v0.2.0** - Phase 1+ Complete (Enhanced Drawing with Select & Shift-Snap)
+**v0.3.0** - Phase 2 Complete (Camera System with Placement & Configuration)

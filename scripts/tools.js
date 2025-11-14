@@ -23,6 +23,10 @@ class DrawingTools {
         this.hoverHandle = null;
         this.shiftPressed = false;
 
+        // Camera mode state
+        this.selectedCamera = null;
+        this.cameraDragState = null; // { mode: 'move'|'rotate', startPos, startAngle }
+
         this.setupEventListeners();
     }
 
@@ -74,6 +78,25 @@ class DrawingTools {
         const pos = this.canvasManager.getCanvasCoordinates(e);
 
         if (this.currentTool === 'select') {
+            // Check if clicking on a camera first
+            const clickedCamera = this.canvasManager.findCameraAtPoint(pos);
+            if (clickedCamera) {
+                this.selectedCamera = clickedCamera;
+                this.selectedObstacle = null;
+                this.cameraDragState = {
+                    mode: 'move',
+                    startPos: pos,
+                    startX: clickedCamera.x,
+                    startY: clickedCamera.y
+                };
+                this.canvasManager.render(this.selectedCamera);
+                this.showCameraProperties();
+                if (window.updateStatus) {
+                    window.updateStatus(`Selected camera`);
+                }
+                return;
+            }
+
             // Check if clicking on a resize handle
             if (this.selectedObstacle && this.hoverHandle !== null) {
                 this.dragState = {
@@ -99,6 +122,8 @@ class DrawingTools {
             const clickedObstacle = this.findObstacleAtPoint(pos);
             if (clickedObstacle) {
                 this.selectedObstacle = clickedObstacle;
+                this.selectedCamera = null;
+                this.hideCameraProperties();
                 this.canvasManager.render();
                 this.drawSelection();
                 if (window.updateStatus) {
@@ -107,13 +132,21 @@ class DrawingTools {
             } else {
                 // Deselect if clicking on empty space
                 this.selectedObstacle = null;
+                this.selectedCamera = null;
+                this.hideCameraProperties();
                 this.canvasManager.render();
             }
             return;
         }
 
         if (this.currentTool === 'camera') {
-            return; // Camera tool will be implemented in Phase 2
+            // Place a new camera
+            const camera = new Camera(pos.x, pos.y);
+            this.canvasManager.addCamera(camera);
+            if (window.updateStatus) {
+                window.updateStatus('Camera placed');
+            }
+            return;
         }
 
         // Drawing tools
@@ -136,7 +169,19 @@ class DrawingTools {
 
         // Handle select mode
         if (this.currentTool === 'select') {
-            // If dragging/resizing
+            // If dragging camera
+            if (this.cameraDragState) {
+                if (this.cameraDragState.mode === 'move' && this.selectedCamera) {
+                    const dx = pos.x - this.cameraDragState.startPos.x;
+                    const dy = pos.y - this.cameraDragState.startPos.y;
+                    this.selectedCamera.x = this.cameraDragState.startX + dx;
+                    this.selectedCamera.y = this.cameraDragState.startY + dy;
+                    this.canvasManager.render(this.selectedCamera);
+                }
+                return;
+            }
+
+            // If dragging/resizing obstacle
             if (this.dragState) {
                 if (this.dragState.mode === 'move') {
                     this.moveObstacle(pos);
@@ -183,6 +228,15 @@ class DrawingTools {
     }
 
     handleMouseUp(e) {
+        // Handle select mode camera drag end
+        if (this.currentTool === 'select' && this.cameraDragState) {
+            this.cameraDragState = null;
+            if (window.updateStatus) {
+                window.updateStatus('Camera modified');
+            }
+            return;
+        }
+
         // Handle select mode drag end
         if (this.currentTool === 'select' && this.dragState) {
             this.dragState = null;
@@ -525,6 +579,59 @@ class DrawingTools {
 
         if (window.updateStatus) {
             window.updateStatus('Shape deleted');
+        }
+    }
+
+    // ===== CAMERA PROPERTIES PANEL =====
+
+    showCameraProperties() {
+        const panel = document.getElementById('properties-panel');
+        if (!panel || !this.selectedCamera) return;
+
+        panel.style.display = 'block';
+
+        // Populate fields with camera properties
+        document.getElementById('camera-angle').value = this.selectedCamera.angle;
+        document.getElementById('camera-fov').value = this.selectedCamera.fov;
+        document.getElementById('camera-max-distance').value = this.selectedCamera.maxDistance;
+        document.getElementById('camera-clear-distance').value = this.selectedCamera.clearDistance;
+    }
+
+    hideCameraProperties() {
+        const panel = document.getElementById('properties-panel');
+        if (panel) {
+            panel.style.display = 'none';
+        }
+    }
+
+    getSelectedCamera() {
+        return this.selectedCamera;
+    }
+
+    deleteSelectedCamera() {
+        if (!this.selectedCamera) return;
+
+        this.canvasManager.removeCamera(this.selectedCamera.id);
+        this.selectedCamera = null;
+        this.hideCameraProperties();
+        this.canvasManager.render();
+
+        if (window.updateStatus) {
+            window.updateStatus('Camera deleted');
+        }
+    }
+
+    duplicateSelectedCamera() {
+        if (!this.selectedCamera) return;
+
+        const newCamera = this.selectedCamera.clone();
+        this.canvasManager.addCamera(newCamera);
+        this.selectedCamera = newCamera;
+        this.canvasManager.render(this.selectedCamera);
+        this.showCameraProperties();
+
+        if (window.updateStatus) {
+            window.updateStatus('Camera duplicated');
         }
     }
 }

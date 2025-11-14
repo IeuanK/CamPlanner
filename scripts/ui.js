@@ -11,6 +11,7 @@ class UIController {
 
         this.setupToolButtons();
         this.setupActionButtons();
+        this.setupCameraControls();
         this.setupStatusBar();
     }
 
@@ -71,6 +72,48 @@ class UIController {
         undoButton.addEventListener('click', () => {
             // TODO: Implement undo functionality
             this.updateStatus('Undo not yet implemented');
+        });
+    }
+
+    setupCameraControls() {
+        // Camera property inputs
+        const angleInput = document.getElementById('camera-angle');
+        const fovInput = document.getElementById('camera-fov');
+        const maxDistanceInput = document.getElementById('camera-max-distance');
+        const clearDistanceInput = document.getElementById('camera-clear-distance');
+
+        // Update camera properties when inputs change
+        const updateCameraProperty = () => {
+            const camera = this.drawingTools.getSelectedCamera();
+            if (!camera) return;
+
+            camera.updateProperties({
+                angle: parseInt(angleInput.value) || 0,
+                fov: parseInt(fovInput.value) || 90,
+                maxDistance: parseInt(maxDistanceInput.value) || 300,
+                clearDistance: parseInt(clearDistanceInput.value) || 150
+            });
+
+            this.canvasManager.render(camera);
+        };
+
+        angleInput.addEventListener('input', updateCameraProperty);
+        fovInput.addEventListener('input', updateCameraProperty);
+        maxDistanceInput.addEventListener('input', updateCameraProperty);
+        clearDistanceInput.addEventListener('input', updateCameraProperty);
+
+        // Duplicate camera button
+        const duplicateButton = document.getElementById('btn-duplicate-camera');
+        duplicateButton.addEventListener('click', () => {
+            this.drawingTools.duplicateSelectedCamera();
+        });
+
+        // Delete camera button
+        const deleteButton = document.getElementById('btn-delete-camera');
+        deleteButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to delete this camera?')) {
+                this.drawingTools.deleteSelectedCamera();
+            }
         });
     }
 
