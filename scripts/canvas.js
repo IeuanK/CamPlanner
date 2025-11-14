@@ -143,8 +143,10 @@ class CanvasManager {
     findCameraAtPoint(point) {
         // Search in reverse order to select topmost camera
         for (let i = this.cameras.length - 1; i >= 0; i--) {
-            if (this.cameras[i].containsPoint(point)) {
-                return this.cameras[i];
+            const camera = this.cameras[i];
+            if (camera.containsPoint(point)) {
+                console.log('Camera found:', camera.id);
+                return camera;
             }
         }
         return null;

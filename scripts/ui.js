@@ -47,14 +47,14 @@ class UIController {
         canvas.className = '';
         if (tool === 'select') {
             canvas.classList.add('cursor-default');
+            this.updateStatus('Select mode - Click on cameras or objects to select and modify them');
         } else if (tool === 'camera') {
             canvas.classList.add('cursor-pointer');
+            this.updateStatus('Camera mode - Click to place cameras');
         } else {
             canvas.classList.add('cursor-crosshair');
+            this.updateStatus(`${tool.charAt(0).toUpperCase() + tool.slice(1)} tool selected - Draw on canvas`);
         }
-
-        // Update status
-        this.updateStatus(`${tool.charAt(0).toUpperCase() + tool.slice(1)} tool selected`);
     }
 
     setupActionButtons() {
@@ -82,11 +82,22 @@ class UIController {
         const maxDistanceInput = document.getElementById('camera-max-distance');
         const clearDistanceInput = document.getElementById('camera-clear-distance');
 
+        if (!angleInput || !fovInput || !maxDistanceInput || !clearDistanceInput) {
+            console.error('Camera property inputs not found!');
+            return;
+        }
+
+        console.log('Setting up camera controls...');
+
         // Update camera properties when inputs change
         const updateCameraProperty = () => {
             const camera = this.drawingTools.getSelectedCamera();
-            if (!camera) return;
+            if (!camera) {
+                console.warn('No camera selected for property update');
+                return;
+            }
 
+            console.log('Updating camera properties...');
             camera.updateProperties({
                 angle: parseInt(angleInput.value) || 0,
                 fov: parseInt(fovInput.value) || 90,

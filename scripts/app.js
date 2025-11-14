@@ -41,10 +41,11 @@ class CameraPlanner {
         this.uiController = new UIController(this.canvasManager, this.drawingTools);
         console.log('UI Controller initialized');
 
-        // Set default tool
-        this.uiController.selectTool('freehand');
+        // Set default tool to Select for easier camera/object manipulation
+        this.uiController.selectTool('select');
 
         console.log('Camera Layout Planner - Ready!');
+        console.log('Current tool:', this.drawingTools.currentTool);
     }
 }
 
