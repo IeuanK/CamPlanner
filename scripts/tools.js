@@ -76,7 +76,6 @@ class DrawingTools {
 
     handleMouseDown(e) {
         const pos = this.canvasManager.getCanvasCoordinates(e);
-        console.log('Mouse down at:', pos, 'Tool:', this.currentTool);
 
         if (this.currentTool === 'select') {
             // Check if clicking on a camera first
@@ -133,7 +132,6 @@ class DrawingTools {
                     window.updateStatus(`Selected ${clickedObstacle.type}`);
                 }
             } else {
-                console.log('No obstacle clicked, deselecting');
                 // Deselect if clicking on empty space
                 this.selectedObstacle = null;
                 this.selectedCamera = null;
@@ -401,17 +399,14 @@ class DrawingTools {
     // ===== SELECT MODE HELPER METHODS =====
 
     findObstacleAtPoint(point) {
-        console.log('Finding obstacle at point:', point, 'Total obstacles:', this.canvasManager.obstacles.length);
         // Search in reverse order (top to bottom) to select topmost obstacle
         for (let i = this.canvasManager.obstacles.length - 1; i >= 0; i--) {
             const obstacle = this.canvasManager.obstacles[i];
-            const isInObstacle = this.isPointInObstacle(point, obstacle);
-            if (isInObstacle) {
-                console.log('Found obstacle:', obstacle.type, obstacle.id);
+            if (this.isPointInObstacle(point, obstacle)) {
+                console.log('Obstacle found:', obstacle.type, obstacle.id);
                 return obstacle;
             }
         }
-        console.log('No obstacle found at point');
         return null;
     }
 

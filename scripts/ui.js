@@ -29,7 +29,6 @@ class UIController {
     }
 
     selectTool(tool) {
-        console.log('Selecting tool:', tool);
         this.currentTool = tool;
         this.drawingTools.setTool(tool);
 
